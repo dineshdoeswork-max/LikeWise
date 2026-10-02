@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {priorityScore,priority,haversine,optimizeRoute,splitRouteIntoTrips} from './optimizer.js';
+const now=Date.parse('2026-10-02T00:00:00Z'), team={id:'a',startLat:0,startLng:0};
+const r=(id,lat,urgency=1,volumeEst=1)=>({id,lat,lng:0,urgency,volumeEst,createdAt:new Date(now).toISOString(),assignedTeam:'a',status:'pending'});
+test('score includes age in days and does not add future age',()=>{assert.equal(priorityScore({...r('a',0),createdAt:new Date(now-86400000).toISOString()},now),6);assert.equal(priorityScore({...r('a',0),createdAt:new Date(now+1000).toISOString()},now),4);});
+test('haversine and priority boundaries',()=>{assert.equal(haversine(r('a',0),r('b',0)),0);assert.ok(Math.abs(haversine(r('a',0),r('b',1))-111.195)<.01);assert.equal(priority(r('a',0,3,3),now),'high');assert.equal(priority(r('a',0,2,1),now),'medium');});
+test('priority leads and the truck returns before exceeding capacity',()=>{const result=optimizeRoute(team,[r('low',.01,1,2),r('far',.03,3,6),r('near',.02,3,6)],now,{capacityBags:10,shiftMinutes:500,averageSpeedKmh:30,serviceMinutes:0});assert.deepEqual(result.orderedRequestIds,['near','low','far']);assert.equal(result.trips.length,2);assert.deepEqual(result.trips.map(t=>t.loadBags),[8,6]);assert.ok(result.totalDistanceKm>11&&result.totalDistanceKm<12);});
+test('stops outside the shift are deferred',()=>{const result=optimizeRoute(team,[r('near',.01,3,5),r('far',2,3,5)],now,{capacityBags:10,shiftMinutes:20,averageSpeedKmh:30,serviceMinutes:1});assert.deepEqual(result.orderedRequestIds,['near']);assert.deepEqual(result.deferredRequestIds,['far']);assert.ok(result.totalMinutes<=20);});
+test('empty routes and persisted route trip reconstruction',()=>{const result=optimizeRoute(team,[],now);assert.deepEqual(result.orderedRequestIds,[]);assert.equal(result.totalDistanceKm,0);assert.deepEqual(splitRouteIntoTrips({orderedRequestIds:['a','b']},[r('a',0,1,7),r('b',0,1,6)],10).map(t=>t.requestIds),[['a'],['b']]);});

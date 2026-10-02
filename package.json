@@ -1,0 +1,34 @@
+{
+  "name": "cleanroute",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint app src",
+    "test": "node --test src/utils/optimizer.test.js",
+    "db:setup": "node --env-file=.env.local scripts/apply-schema.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.31.0",
+    "next": "16.3.4",
+    "postgres": "^3.4.7",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.3.4",
+    "typescript": "5.9.3"
+  },
+  "type": "module"
+}
